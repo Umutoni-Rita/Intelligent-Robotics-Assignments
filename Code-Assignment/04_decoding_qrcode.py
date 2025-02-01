@@ -4,7 +4,7 @@ import cv2
 detector = cv2.QRCodeDetector()
 
 # Read the image
-image = cv2.imread("aztec.png")
+image = cv2.imread("qr_code.png")
 # image = cv2.imread("qr_code-modified.png")
 
 # Detect and decode the QR code
