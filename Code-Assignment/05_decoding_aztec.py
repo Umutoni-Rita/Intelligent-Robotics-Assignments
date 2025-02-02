@@ -1,21 +1,35 @@
 import cv2
-import pyzbar.pyzbar as pyzbar
-
-# Load the image
-image = cv2.imread("aztec.png")
-
-# Check if the image is loaded correctly
-if image is None:
-    print("Error: Unable to load the image.")
-    exit(1)
-
-# Decode the Aztec code
-decoded = pyzbar.decode(image)
-
-# Check if any Aztec code was found
-if len(decoded) == 0:
-    print("No Aztec code found in the image.")
+from pyzbar.pyzbar import decode
+import numpy as np
+import zxing
+# Initialize the ZXing reader
+reader = zxing.BarCodeReader()
+# Load the Aztec code image
+image_path = "aztec.png"  
+image = cv2.imread(image_path)
+# Decode the Aztec code using ZXing
+decoded = reader.decode(image_path)
+# Check if the Aztec code was successfully decoded
+if decoded:
+    print(f"Decoded Data: {decoded.parsed}")
+    print(f"Barcode Format: {decoded.format}")
+    # Check if points are available
+    if hasattr(decoded, "points") and decoded.points:
+        try:
+            points = np.array(decoded.points, dtype=np.int32).reshape((-1, 1, 2))  # Ensure proper shape
+            cv2.polylines(image, [points], isClosed=True, color=(0, 255, 0), thickness=2)
+            # Annotate the decoded data beside the bounding box
+            x, y = points[0][0]  # Extract x, y coordinates
+            cv2.putText(image, decoded.parsed, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        except Exception as e:
+            print(f"Error processing bounding box: {e}")
+    # Display the image with the Aztec code highlighted and annotated
+    cv2.imshow("Aztec Code with Annotation", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # Save the annotated image
+    output_file = "decoded_aztec.png"
+    cv2.imwrite(output_file, image)
+    print(f"Annotated image saved as {output_file}")
 else:
-    # Extract the data from the decoded code
-    data = decoded[0].data.decode("utf-8")
-    print("Decoded data:", data)
+    print("Failed to decode the Aztec code.")
